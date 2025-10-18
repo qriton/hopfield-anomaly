@@ -1,14 +1,21 @@
 {
   "name": "@qriton/hopfield-anomaly",
   "version": "3.1.0",
-  "description": "Production-ready Hopfield Neural Network for real-time anomaly detection",
+  "type": "module",
+  "description": "Qriton's Production-ready Hopfield Neural Network for real-time anomaly detection",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.esm.js"
+    }
+  },
   "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
-  "scripts": {
+ "scripts": {
     "build": "rollup -c",
-    "test": "jest --coverage",
-    "lint": "eslint src/**/*.js"
+    "test": "jest",
+    "prepublishOnly": "npm test && npm run build"
   },
   "keywords": ["hopfield", "neural-network", "anomaly-detection", "machine-learning"],
   "author": "Qriton",
