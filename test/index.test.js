@@ -117,6 +117,60 @@ describe('HopfieldNetwork', () => {
   });
 });
 
+describe('HopfieldNetwork - Edge Cases', () => {
+  test('throws error for invalid size', () => {
+    expect(() => new HopfieldNetwork(0)).toThrow('Network size must be a positive integer');
+    expect(() => new HopfieldNetwork(-5)).toThrow('Network size must be a positive integer');
+    expect(() => new HopfieldNetwork(1.5)).toThrow('Network size must be a positive integer');
+  });
+
+  test('throws error for invalid pattern array', () => {
+    const net = new HopfieldNetwork(10);
+    expect(() => net.train(null)).toThrow('Patterns must be a non-empty array');
+    expect(() => net.train([])).toThrow('Patterns must be a non-empty array');
+  });
+
+  test('throws error for wrong pattern size', () => {
+    const net = new HopfieldNetwork(10);
+    expect(() => net.train([[1, -1, 1]])).toThrow('Pattern 0 must be an array of size 10');
+  });
+
+  test('throws error for invalid pattern values', () => {
+    const net = new HopfieldNetwork(10);
+    expect(() => net.train([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])).toThrow('Pattern 0 must contain only -1 or 1 values');
+  });
+
+  test('throws error for unknown learning rule', () => {
+    const net = new HopfieldNetwork(10, { learningRule: 'invalid' });
+    expect(() => net.train([[1, -1, 1, -1, 1, -1, 1, -1, 1, -1]])).toThrow('Unknown learning rule: invalid');
+  });
+
+  test('throws error when recall before training', () => {
+    const net = new HopfieldNetwork(10);
+    expect(() => net.recall([1, -1, 1, -1, 1, -1, 1, -1, 1, -1])).toThrow('Network must be trained before recall');
+  });
+
+  test('throws error for wrong input size in recall', () => {
+    const net = new HopfieldNetwork(10);
+    net.train([[1, -1, 1, -1, 1, -1, 1, -1, 1, -1]]);
+    expect(() => net.recall([1, -1, 1])).toThrow('Input must be an array of size 10');
+  });
+
+  test('recall does not converge within max iterations', () => {
+    const net = new HopfieldNetwork(10, { seed: 12345 });
+    net.train([[1, 1, 1, 1, 1, -1, -1, -1, -1, -1]]);
+    const result = net.recall([1, -1, 1, -1, 1, -1, 1, -1, 1, -1], 1);
+    expect(result.converged).toBe(false);
+    expect(result.iterations).toBe(1);
+  });
+
+  test('Storkey learning rule trains correctly', () => {
+    const net = new HopfieldNetwork(10, { learningRule: 'storkey' });
+    net.train([[1, -1, 1, -1, 1, -1, 1, -1, 1, -1]]);
+    expect(net.trained).toBe(true);
+  });
+});
+
 describe('HopfieldAnomalyDetector', () => {
   test('creates detector with correct parameters', () => {
     const detector = new HopfieldAnomalyDetector({
@@ -274,6 +328,119 @@ describe('HopfieldAnomalyDetector', () => {
   });
 });
 
+describe('HopfieldAnomalyDetector - Edge Cases', () => {
+  test('throws error for invalid featureCount', () => {
+    expect(() => new HopfieldAnomalyDetector({ featureCount: 0 })).toThrow('featureCount must be a positive integer');
+    expect(() => new HopfieldAnomalyDetector({ featureCount: -1 })).toThrow('featureCount must be a positive integer');
+    expect(() => new HopfieldAnomalyDetector({ featureCount: 1.5 })).toThrow('featureCount must be a positive integer');
+  });
+
+  test('throws error for wrong threshold count', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 3 });
+    expect(() => detector.setThresholds({ a: { mode: 'above', value: 5 } })).toThrow('Expected 3 thresholds, got 1');
+  });
+
+  test('throws error for missing threshold mode', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 1 });
+    expect(() => detector.setThresholds({ a: { value: 5 } })).toThrow("Threshold for 'a' missing mode");
+  });
+
+  test('throws error for invalid threshold mode', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 1 });
+    expect(() => detector.setThresholds({ a: { mode: 'invalid', value: 5 } })).toThrow("Invalid mode 'invalid' for 'a'");
+  });
+
+  test('throws error for range mode without min/max', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 1 });
+    expect(() => detector.setThresholds({ a: { mode: 'range', value: 5 } })).toThrow("Range mode for 'a' requires min and max");
+  });
+
+  test('throws error for missing value in non-range mode', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 1 });
+    expect(() => detector.setThresholds({ a: { mode: 'above' } })).toThrow("Threshold for 'a' missing value");
+  });
+
+  test('throws error when training without thresholds', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2 });
+    expect(() => detector.train()).toThrow('Thresholds must be set before training');
+  });
+
+  test('throws error when training without patterns and useDefaults=false', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2 });
+    detector.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    expect(() => detector.train({ useDefaults: false })).toThrow('No training patterns provided');
+  });
+
+  test('throws error when detecting before training', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2 });
+    detector.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    detector.addDataPoint({ a: 3, b: 12 });
+    detector.addDataPoint({ a: 4, b: 11 });
+    expect(() => detector.detect()).toThrow('Network not trained. Call train() first.');
+  });
+
+  test('detect returns null when buffer not full', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2, snapshotLength: 5 });
+    detector.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    detector.trainWithDefaults();
+    detector.addDataPoint({ a: 3, b: 12 });
+    const result = detector.detect();
+    expect(result).toBeNull();
+  });
+
+  test('throws error for missing feature in data point', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2 });
+    detector.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } }, ['a', 'b']);
+    expect(() => detector.addDataPoint({ a: 3 })).toThrow('Missing feature: b');
+  });
+
+  test('all threshold modes work correctly', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 4, snapshotLength: 2 });
+    detector.setThresholds({
+      above: { mode: 'above', value: 5 },
+      below: { mode: 'below', value: 10 },
+      equal: { mode: 'equal', value: 7 },
+      range: { mode: 'range', min: 3, max: 8 }
+    });
+    
+    detector.trainWithDefaults();
+    
+    // Test above mode: 6 > 5 = true (1)
+    // Test below mode: 8 < 10 = true (1)
+    // Test equal mode: 7 === 7 = true (1)
+    // Test range mode: 5 in [3,8] = true (1)
+    detector.addDataPoint({ above: 6, below: 8, equal: 7, range: 5 });
+    detector.addDataPoint({ above: 6, below: 8, equal: 7, range: 5 });
+    
+    const result = detector.detect();
+    expect(result).toBeDefined();
+  });
+
+  test('reset clears buffer', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2, snapshotLength: 3 });
+    detector.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    detector.addDataPoint({ a: 3, b: 12 });
+    detector.addDataPoint({ a: 4, b: 11 });
+    expect(detector.buffer.length).toBe(2);
+    detector.reset();
+    expect(detector.buffer.length).toBe(0);
+  });
+
+  test('getStats returns correct information', () => {
+    const detector = new HopfieldAnomalyDetector({ featureCount: 2 });
+    detector.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    detector.trainWithDefaults();
+    
+    const stats = detector.getStats();
+    expect(stats.trained).toBe(true);
+    expect(stats.dataPointsProcessed).toBe(0);
+    expect(stats.anomaliesDetected).toBe(0);
+    expect(stats.networkInfo).toBeDefined();
+    expect(stats.baseline).toBeDefined();
+    expect(stats.scoreWeights).toBeDefined();
+  });
+});
+
 describe('AdaptiveThreshold', () => {
   test('creates threshold with defaults', () => {
     const thresh = new AdaptiveThreshold();
@@ -326,6 +493,44 @@ describe('AdaptiveThreshold', () => {
     expect(stats.p50).toBeCloseTo(0.5, 1);
     expect(stats.p95).toBeCloseTo(0.95, 1);
     expect(stats.p99).toBeCloseTo(0.99, 1);
+  });
+});
+
+describe('AdaptiveThreshold - Edge Cases', () => {
+  test('getStats returns null for empty scores', () => {
+    const thresh = new AdaptiveThreshold();
+    const stats = thresh.getStats();
+    expect(stats.p50).toBeNull();
+    expect(stats.p95).toBeNull();
+    expect(stats.p99).toBeNull();
+  });
+
+  test('threshold stays within bounds', () => {
+    const thresh = new AdaptiveThreshold(0.5, 10, false);
+    
+    // Try to push below 0.1
+    for (let i = 0; i < 50; i++) {
+      thresh.update(0.4, true, true); // False negative
+    }
+    expect(thresh.threshold).toBeGreaterThanOrEqual(0.1);
+    
+    // Reset and try to push above 0.9
+    const thresh2 = new AdaptiveThreshold(0.5, 10, false);
+    for (let i = 0; i < 50; i++) {
+      thresh2.update(0.6, true, false); // False positive
+    }
+    expect(thresh2.threshold).toBeLessThanOrEqual(0.9);
+  });
+
+  test('unsupervised mode does not update before window is full', () => {
+    const thresh = new AdaptiveThreshold(0.5, 10, true);
+    const initialThreshold = thresh.threshold;
+    
+    for (let i = 0; i < 5; i++) {
+      thresh.update(0.8); // Only 5 scores, window size is 10
+    }
+    
+    expect(thresh.threshold).toBe(initialThreshold);
   });
 });
 
@@ -384,5 +589,47 @@ describe('AnomalyMonitor', () => {
     
     expect(restored.detector.featureCount).toBe(2);
     expect(restored.detector.trained).toBe(true);
+  });
+});
+
+describe('AnomalyMonitor - Edge Cases', () => {
+  test('process returns null when buffer not ready', () => {
+    const monitor = new AnomalyMonitor({ featureCount: 2, snapshotLength: 5 });
+    monitor.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    monitor.trainWithDefaults();
+    
+    const result = monitor.process({ a: 3, b: 12 });
+    expect(result).toBeNull();
+  });
+
+  test('reset works', () => {
+    const monitor = new AnomalyMonitor({ featureCount: 2, snapshotLength: 3 });
+    monitor.setThresholds({ a: { mode: 'above', value: 5 }, b: { mode: 'below', value: 10 } });
+    monitor.trainWithDefaults();
+    
+    monitor.process({ a: 3, b: 12 });
+    monitor.process({ a: 4, b: 11 });
+    
+    monitor.reset();
+    const stats = monitor.getStats();
+    expect(stats.bufferSize).toBe(0);
+  });
+
+  test('benchmark method accessible from monitor', () => {
+    const monitor = new AnomalyMonitor({ featureCount: 2 });
+    const perf = monitor.benchmark({ featureCount: 3, snapshotLength: 2, dataPoints: 50 });
+    expect(perf.trainingTime).toBeGreaterThan(0);
+  });
+
+  test('on method returns monitor for chaining', () => {
+    const monitor = new AnomalyMonitor({ featureCount: 2 });
+    const result = monitor.on('onData', () => {});
+    expect(result).toBe(monitor);
+  });
+
+  test('on method with invalid event does nothing', () => {
+    const monitor = new AnomalyMonitor({ featureCount: 2 });
+    const result = monitor.on('invalidEvent', () => {});
+    expect(result).toBe(monitor);
   });
 });

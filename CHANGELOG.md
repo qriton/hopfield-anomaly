@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.4.0] - 2025-01-20
+## [3.4.0] - 2025-10-20
 
 ### Added
 - Pattern correlation-aware capacity estimation via `estimateCapacity()` method
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.3.0] - 2025-01-20
+## [3.3.0] - 2025-10-20
 
 ### Added
 - **Configurable score weights** via `scoreWeights` constructor option
@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.2.0] - 2025-01-20
+## [3.2.0] - 2025-10-20
 
 ### Added
 - **Unsupervised adaptive threshold** via 95th percentile mode
@@ -96,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.1.0] - 2025-01-18
+## [3.1.0] - 2025-10-18
 
 ### Added
 - **Initial release** of production-ready Hopfield anomaly detection library

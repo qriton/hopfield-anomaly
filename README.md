@@ -409,7 +409,7 @@ Normal data converges to stable, low-energy states, while anomalies result in un
 
 ## 📈 Changelog
 
-### v3.4.0 (2025-01-20)
+### v3.4.0 (2025-10-20)
 **Added:**
 - Pattern correlation-aware capacity estimation (`estimateCapacity()`)
 - Inline test templates in documentation
@@ -422,7 +422,7 @@ Normal data converges to stable, low-energy states, while anomalies result in un
 
 ---
 
-### v3.3.0 (2025-01-20)
+### v3.3.0 (2025-10-20)
 **Added:**
 - Configurable score weights (`scoreWeights` option)
 - Full z-score normalization for all metrics (energy, drop, hamming, margin)
@@ -442,7 +442,7 @@ Normal data converges to stable, low-energy states, while anomalies result in un
 
 ---
 
-### v3.2.0 (2025-01-20)
+### v3.2.0 (2025-10-20)
 **Added:**
 - Unsupervised adaptive threshold (95th percentile mode)
 - Baseline energy statistics with z-score integration
