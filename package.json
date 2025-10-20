@@ -18,6 +18,8 @@
     "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "benchmark": "node scripts/benchmark.js",
+     "demo": "node demo/iot-monitoring.js",
+    "demo:iot": "node demo/iot-monitoring.js",
     "lint": "eslint src/**/*.js test/**/*.js",
     "prepublishOnly": "npm test && npm run build",
     "preversion": "npm test",
