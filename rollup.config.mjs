@@ -3,19 +3,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 
 export default [
-  // CommonJS (for Node.js)
-  {
-    input: 'src/index.js',
-    output: {
-      file: 'dist/index.js',
-      format: 'cjs',
-      exports: 'named',
-      sourcemap: true
-    },
-    plugins: [resolve(), commonjs(), terser()],
-    external: ['events']
-  },
-  // ESM (for modern bundlers)
+  // ESM build
   {
     input: 'src/index.js',
     output: {
@@ -23,7 +11,27 @@ export default [
       format: 'es',
       sourcemap: true
     },
-    plugins: [resolve(), commonjs(), terser()],
-    external: ['events']
+    plugins: [resolve(), commonjs()]
+  },
+  // CommonJS build
+  {
+    input: 'src/index.js',
+    output: {
+      file: 'dist/index.cjs',
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named'
+    },
+    plugins: [resolve(), commonjs()]
+  },
+  // Minified ESM build
+  {
+    input: 'src/index.js',
+    output: {
+      file: 'dist/index.esm.min.js',
+      format: 'es',
+      sourcemap: true
+    },
+    plugins: [resolve(), commonjs(), terser()]
   }
 ];

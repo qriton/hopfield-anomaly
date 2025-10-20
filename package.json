@@ -1,29 +1,43 @@
 {
   "name": "@qriton/hopfield-anomaly",
-  "version": "3.1.0",
+  "version": "3.4.0",
   "type": "module",
-  "description": "Qriton's Production-ready Hopfield Neural Network for real-time anomaly detection",
-  "main": "dist/index.js",
+  "description": "Production-ready Hopfield Neural Network for real-time anomaly detection",
+  "main": "dist/index.cjs",
   "module": "dist/index.esm.js",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.esm.js"
     }
   },
   "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
- "scripts": {
+  "scripts": {
     "build": "rollup -c",
-    "test": "jest",
-    "prepublishOnly": "npm test && npm run build"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "benchmark": "node scripts/benchmark.js",
+    "lint": "eslint src/**/*.js test/**/*.js",
+    "prepublishOnly": "npm test && npm run build",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags"
   },
-  "keywords": ["hopfield", "neural-network", "anomaly-detection", "machine-learning"],
+  "keywords": [
+    "hopfield",
+    "neural-network",
+    "anomaly-detection",
+    "machine-learning",
+    "time-series",
+    "monitoring"
+  ],
   "author": "Qriton",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "rollup": "^4.9.6"
